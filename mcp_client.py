@@ -4,22 +4,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 async def send_brief_to_slack(brief_data: dict) -> str:
-    """Sends the formatted agent brief to Slack using Slack's official Web API."""
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     default_channel = os.getenv("SLACK_CHANNEL_ID", "#general")
     
     if not slack_token:
         raise ValueError("SLACK_BOT_TOKEN is missing in environment variables.")
 
+    scorecard = brief_data.get("scorecard", {})
+    grade_emoji = "🟢" if scorecard.get("grade") == "PASS" else "🔴"
+
     message = (
-        f"🚨 *PerieAI Daily Tech Brief*\n\n"
+        f"🚨 *PerieAI Daily Tech Brief* {grade_emoji}\n\n"
         f"📌 *Topic:* {brief_data['selected_title']}\n"
         f"📝 *Suggested Title:* {brief_data['suggested_blog_title']}\n"
         f"💡 *Why It Matters:* {brief_data['why_it_matters']}\n\n"
         f"📋 *Outline:*\n" + "\n".join(f"• {item}" for item in brief_data['suggested_outline']) + "\n\n"
-        f"🔗 *Source:* {brief_data['source_links'][0]}\n"
-        f"⭐ *Evaluation Score:* {brief_data['evaluation_score']}"
+        f"🤖 *Editorial Judge Review:*\n"
+        f"• *Grade:* `{scorecard.get('grade', 'N/A')}` (Tech Depth: {scorecard.get('technical_depth_score', 0)}/1.0)\n"
+        f"• *Critique:* {scorecard.get('critique', 'N/A')}\n\n"
+        f"🔗 *Source:* {brief_data['source_links'][0]}"
     )
 
     url = "https://slack.com/api/chat.postMessage"
