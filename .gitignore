@@ -1,0 +1,12 @@
+# Virtual environment
+venv/
+__pycache__/
+
+# Environment variables & secrets
+.env
+
+# Local SQLite database
+*.db
+
+# OS files
+.DS_Store
