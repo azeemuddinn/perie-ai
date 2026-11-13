@@ -47,7 +47,7 @@ def evaluate_topics_with_llm(candidates: list[dict], provider: str = None) -> To
     elif active_provider == "groq":
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         chat_completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",  # <--- Updated active model ID
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},

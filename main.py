@@ -3,6 +3,7 @@ from database import init_db, get_db
 from collector import fetch_rss_topics, save_topics_to_db
 from collector import fetch_rss_topics, save_topics_to_db
 from harness import run_agent_pipeline
+from mcp_client import send_brief_to_slack
 
 
 app = FastAPI(title="PerieAI", version="1.0.0")
@@ -42,3 +43,24 @@ def trigger_agent(provider: str | None = None):
         return run_agent_pipeline(provider=provider)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+ 
+
+# @app.post("/test-slack")
+# async def test_slack():
+#     mock_brief = {
+#         "selected_title": "Test Brief: PerieAI Slack Integration",
+#         "suggested_blog_title": "Testing MCP Slack Delivery",
+#         "why_it_matters": "Verifying that the MCP server successfully authenticates and posts.",
+#         "short_description": "This is a test message to verify Slack connectivity.",
+#         "source_links": ["https://github.com"],
+#         "suggested_outline": ["1. Test Step"],
+#         "evaluation_score": 1.0
+#     }
+#     try:
+#         result = await send_brief_to_slack(mock_brief)
+#         return {"status": "success", "mcp_response": result}
+#     except Exception as e:
+#         traceback.print_exc()  # Prints full traceback to your terminal
+#         return {"status": "failed", "error": str(e), "traceback": traceback.format_exc()}

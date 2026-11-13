@@ -1,5 +1,8 @@
+import asyncio
+
 from database import get_db
 from llm_client import evaluate_topics_with_llm, TopicBrief
+from mcp_client import send_brief_to_slack
 
 def get_pending_topics(limit: int = 15) -> list[dict]:
     """Fetches unreviewed topics from SQLite."""
@@ -50,5 +53,33 @@ def run_agent_pipeline(provider: str = None) -> dict:
     return {
         "status": "completed",
         "provider_used": provider or "default",
+        "result": brief.model_dump()
+    }
+
+
+def run_agent_pipeline(provider: str = None) -> dict:
+    candidates = get_pending_topics(limit=15)
+    if not candidates:
+        return {"status": "skipped", "reason": "No pending topics in database. Run /collect first."}
+
+    brief: TopicBrief = evaluate_topics_with_llm(candidates, provider=provider)
+
+    valid_ids = [c["id"] for c in candidates]
+    if brief.selected_topic_id not in valid_ids:
+        raise ValueError(f"Hallucinated topic ID {brief.selected_topic_id} not in candidates.")
+
+    finalize_run(brief.selected_topic_id, valid_ids, brief)
+
+    # Automatically dispatch the brief to Slack via MCP
+    try:
+        asyncio.run(send_brief_to_slack(brief.model_dump()))
+        slack_status = "sent"
+    except Exception as e:
+        slack_status = f"failed: {str(e)}"
+
+    return {
+        "status": "completed",
+        "provider_used": provider or "default",
+        "slack_delivery": slack_status,
         "result": brief.model_dump()
     }
